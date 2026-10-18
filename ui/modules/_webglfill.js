@@ -170,7 +170,7 @@ precision highp float;
 layout(location=0) in vec2 a_lonlat;   // degrees
 out vec2 v_uv;
 const float WF_PI = 3.141592653589793;
-const float WF_LATMAX = 1.4844222297453324;   // mercator lat limit (rad)
+const float WF_LATMAX = 1.5706217938696971;   // mesh pole limit, 89.99 deg (rad); past the 85.05 mercator limit so the polar caps are drawn
 vec2 toMerc(vec2 p){   // p = normalised lon[0..1], lat-fraction[0..1] (north->south)
     float lat = clamp((0.5 - p.y) * WF_PI, -WF_LATMAX, WF_LATMAX);
     float my = log(tan(WF_PI*0.25 + lat*0.5));
@@ -186,16 +186,27 @@ void main(){
     gl_Position = clip;
 }`;
 
-// Build the lon/lat mesh (two triangles per cell), tiled across WORLD_COPIES' extra
-// +-360 degree strips (see that constant's own docstring). Shared by createFillLayer
-// (hour-animated) and createStaticFillLayer (single texture) -- identical geometry
-// either way, since the seam-tiling need doesn't depend on how many textures a given
-// fill variant samples.
-function buildFillMesh(gl) {
+// Latitude edges of the mesh rows, north to south. The regular rows stop at the Web
+// Mercator limit; the extra rows beyond it carry the fill the rest of the way to the
+// poles (Mercator puts the poles at infinity, so the last edge stops a hair short of
+// 90). Without them every fill layer leaves a dark disc around each pole on the globe.
+const POLE_LAT = 89.99;
+function meshLatEdges() {
+    const edges = [POLE_LAT, 88, 86.5];
+    const dLat = (2 * LAT_MAX) / MESH_ROWS;
+    for (let r = 0; r <= MESH_ROWS; r++) edges.push(LAT_MAX - r * dLat);
+    edges.push(-86.5, -88, -POLE_LAT);
+    return edges;
+}
+
+// The mesh as flat [lon, lat, ...] pairs, two triangles per cell, tiled across
+// WORLD_COPIES' extra +-360 degree strips (see that constant's own docstring).
+function fillMeshVertices() {
     const verts = [];
-    const dLon = 360 / MESH_COLS, dLat = (2 * LAT_MAX) / MESH_ROWS;
-    for (let r = 0; r < MESH_ROWS; r++) {
-        const lat0 = LAT_MAX - r * dLat, lat1 = LAT_MAX - (r + 1) * dLat;
+    const dLon = 360 / MESH_COLS;
+    const edges = meshLatEdges();
+    for (let r = 0; r < edges.length - 1; r++) {
+        const lat0 = edges[r], lat1 = edges[r + 1];
         for (let w = -WORLD_COPIES; w <= WORLD_COPIES; w++) {
             const wOff = w * 360;
             for (let c = 0; c < MESH_COLS; c++) {
@@ -205,6 +216,17 @@ function buildFillMesh(gl) {
             }
         }
     }
+    return verts;
+}
+export { fillMeshVertices };
+
+// Build the lon/lat mesh (two triangles per cell), tiled across WORLD_COPIES' extra
+// +-360 degree strips (see that constant's own docstring). Shared by createFillLayer
+// (hour-animated) and createStaticFillLayer (single texture) -- identical geometry
+// either way, since the seam-tiling need doesn't depend on how many textures a given
+// fill variant samples.
+function buildFillMesh(gl) {
+    const verts = fillMeshVertices();
     const meshVertCount = verts.length / 2;
     const meshBuf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, meshBuf);
