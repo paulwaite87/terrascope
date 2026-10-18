@@ -21,6 +21,14 @@ const VOLCANIC_SO2_PALETTE = [
     [0.0, 0.953, 1.0], [0.161, 0.475, 1.0], [0.769, 0.0, 1.0], [1.0, 0.0, 0.784],
 ];
 
+// Dust's sand palette -- mirrors tasks/air_quality.py's _DUST_COLORS/_DUST_CMAP
+// (#f6e7b4 #e8b85a #c9772b #8a4a1c #4e2a12).
+const DUST_PALETTE = [
+    [246 / 255, 231 / 255, 180 / 255], [232 / 255, 184 / 255, 90 / 255],
+    [201 / 255, 119 / 255, 43 / 255], [138 / 255, 74 / 255, 28 / 255],
+    [78 / 255, 42 / 255, 18 / 255],
+];
+
 function buildLUT(palette) {
     const lut = new Uint8Array(256 * 4);
     for (let i = 0; i < 256; i++) {
@@ -35,31 +43,34 @@ function buildLUT(palette) {
 }
 const AQI_LUT = buildLUT(AQI_PALETTE);
 const VOLCANIC_SO2_LUT = buildLUT(VOLCANIC_SO2_PALETTE);
+const DUST_LUT = buildLUT(DUST_PALETTE);
 
 // Mirrors tasks/air_quality.py's per-variable display/scale metadata.
 const DISPLAY_LABEL = {
     pm2_5: 'PM2.5', pm10: 'PM10', aod: 'Smoke (AOD)',
-    so2: 'SO2 (Sulphur Dioxide)', so2_volcanic: 'SO2 (Volcanic)',
+    so2: 'SO2 (Sulphur Dioxide)', so2_volcanic: 'SO2 (Volcanic)', dust: 'Dust (AOD)',
 };
-const DISPLAY_UNIT = { pm2_5: 'µg/m³', pm10: 'µg/m³', aod: '', so2: 'DU', so2_volcanic: 'DU' };
-const TICK_FORMAT = { pm2_5: '%d', pm10: '%d', aod: '%.2f', so2: '%.1f', so2_volcanic: '%.1f' };
+const DISPLAY_UNIT = { pm2_5: 'µg/m³', pm10: 'µg/m³', aod: '', so2: 'DU', so2_volcanic: 'DU', dust: '' };
+const TICK_FORMAT = { pm2_5: '%d', pm10: '%d', aod: '%.2f', so2: '%.1f', so2_volcanic: '%.1f', dust: '%.2f' };
 const MIN_SETTING_KEY = {
     pm2_5: 'pm2_5_min', pm10: 'pm10_min', aod: 'aod_min', so2: 'so2_min', so2_volcanic: 'so2_min',
+    dust: 'dust_min',
 };
-const DEFAULT_MIN = { pm2_5: 35, pm10: 150, aod: 0.5, so2: 1.0, so2_volcanic: 1.0 };
-const FIXED_CEILING = { pm2_5: 250, pm10: 400, aod: 3, so2: 20, so2_volcanic: 20 };
+const DEFAULT_MIN = { pm2_5: 35, pm10: 150, aod: 0.5, so2: 1.0, so2_volcanic: 1.0, dust: 0.1 };
+const FIXED_CEILING = { pm2_5: 250, pm10: 400, aod: 3, so2: 20, so2_volcanic: 20, dust: 1.5 };
+const LUT_FOR = { so2_volcanic: VOLCANIC_SO2_LUT, dust: DUST_LUT };
 
 // so2_volcanic's min setting lives in the "volcanoes" section (Volcano Properties),
 // not "air_quality" -- mirrors tasks/air_quality.py's _SETTINGS_SECTION_OVERRIDE.
 // volcanoesCfg is threaded through from liveLayerSync's globalKeys (see loadLayer).
-function keySpecFor(cfg, volcanoesCfg) {
+export function keySpecFor(cfg, volcanoesCfg) {
     const variable = cfg.variable || 'pm2_5';
     const settings = variable === 'so2_volcanic' ? (volcanoesCfg || {}) : cfg;
     const vmin = Number(settings[MIN_SETTING_KEY[variable]] ?? DEFAULT_MIN[variable]);
     const vmax = FIXED_CEILING[variable];
     const unit = DISPLAY_UNIT[variable];
     return {
-        lut: variable === 'so2_volcanic' ? VOLCANIC_SO2_LUT : AQI_LUT,
+        lut: LUT_FOR[variable] || AQI_LUT,
         vmin, vmax, ticks: [0, 1, 2, 3, 4].map((i) => vmin + (i / 4) * (vmax - vmin)),
         title: unit ? `${DISPLAY_LABEL[variable]} (${unit})` : DISPLAY_LABEL[variable],
         tickFormat: TICK_FORMAT[variable],

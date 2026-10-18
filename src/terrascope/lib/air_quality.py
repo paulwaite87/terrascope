@@ -24,10 +24,14 @@ spikes hard in the plume region. It backs Volcano Properties' "Smoke Plume" over
 exclusively -- not user-selectable as an Air Quality Variable option -- so its
 opacity/threshold settings are owned by the `volcanoes` config section instead of
 `air_quality`'s own; see tasks/air_quality.py's _SETTINGS_SECTION_OVERRIDE.
+
+dust is a 6th, user-selectable variable: CAMS's single-level dust aerosol optical
+depth at 550 nm (in-file "duaod550", dimensionless), owned by `air_quality`'s own
+settings (`dust_min`) like PM2.5/PM10/AOD.
 """
 import os
 
-VARIABLES = ("pm2_5", "pm10", "aod", "so2", "so2_volcanic")
+VARIABLES = ("pm2_5", "pm10", "aod", "so2", "so2_volcanic", "dust")
 
 
 def camsforecast_cache_path(workdir: str) -> str:

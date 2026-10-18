@@ -266,6 +266,7 @@ _AQ_VARIABLE = SelectSpec([
     ("pm10", "PM10 (Unhealthy above 150 µg/m³)"),
     ("aod", "Smoke (AOD)"),
     ("so2", "SO2 (Sulphur Dioxide)"),
+    ("dust", "Dust (AOD)"),
 ], personalizable=True)
 
 # people/km², log-spaced -- see population_density's FIELD_SPECS entries.
@@ -864,6 +865,7 @@ FIELD_SPECS = {
     # ("volcanoes", "so2_min") above, which now belongs to the separate
     # volcanic-specific SO2 variable Smoke Plume renders instead.
     ("air_quality", "so2_min"): SliderSpec(min=0, max=20, step=0.5, decimals=1, suffix=" DU"),
+    ("air_quality", "dust_min"): SliderSpec(min=0, max=1.5, step=0.05, decimals=2),
     # --- Flood Risk (issue #371) -- both mode's variants render every cycle
     # regardless of the configured mode (FloodRiskUpdater.run(), same "render
     # everything, publish only what's selected" shape as GHG's species/mode), and
