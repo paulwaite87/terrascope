@@ -331,7 +331,7 @@ The full list is:
 * Wildfires
 * World Events (conflict, explosions and high-level diplomacy)
 * Ukraine Frontline (DeepStateMap.live's occupied / contested areas)
-* Air Quality (PM2.5/PM10/Smoke/SO2)
+* Air Quality (PM2.5/PM10/Smoke/SO2/Dust)
 * Flood Risk (live observed inundation / historical hazard)
 * Shipping
 * Flight Radar
@@ -692,12 +692,19 @@ global atmospheric composition forecast. A `Variable` selector switches between:
   volcano-specific SO2 field instead. Rendered in the same green-to-purple gradient as
   `PM2.5`/`PM10`/`Smoke (AOD)` above, deliberately distinct from Smoke Plume's own
   cyan-to-magenta palette.
+* `Dust (AOD)` — Dust Aerosol Optical Depth at 550 nm, the part of the column's haze that
+  is mineral dust: Saharan, Arabian and Gobi plumes. Dimensionless, like `Smoke (AOD)`.
+  Rendered in its own pale-sand-to-dark-brown palette so it reads as dust and not as a
+  health index. Its `Critical threshold` defaults to 0.1 (a plume, not background haze) and
+  the scale tops out at 1.5. It is a modelled forecast, not an observation. An install
+  that collected before dust was added shows no dust until its next Air Quality
+  collection.
 
 The `PM2.5`/`PM10` dropdown entries show the concentration widely considered "Unhealthy
 for Sensitive Groups" by the US EPA's Air Quality Index, and that same value is the
 default for the `Critical threshold` slider — readings below it fade out via a smooth
 transparency ramp, so the map highlights genuinely elevated readings rather than
-colourising the whole globe. All four variables render every cycle, so switching
+colourising the whole globe. All six variables render every cycle, so switching
 between them in the config UI applies instantly, no render wait. Colours follow the
 familiar green → yellow → orange → red → purple AQI convention used by most phone
 weather apps' air-quality widgets.
@@ -942,6 +949,7 @@ The data collector is a separate background process which collects data for:
   * PM10 - Coarse Particulate Matter 10 microns
   * Smoke AOD - Aerosol Optical Depth of smoke from fire
   * SO2 - Sulphur Dioxide from all sources
+  * Dust AOD - Aerosol Optical Depth of mineral dust
 * GFS Atmos:
   * Isobars
   * Precipitation

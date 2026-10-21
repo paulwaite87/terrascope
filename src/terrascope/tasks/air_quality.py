@@ -68,7 +68,7 @@ _ALPHA_FEATHER_FRACTION = 0.15
 # the tc*-prefix pattern tcso2/tcwv/tco3 share), confirmed live same as so2's tcso2.
 _CAMS_VARS = {
     "pm2_5": "pm2p5", "pm10": "pm10", "aod": "aod550",
-    "so2": "tcso2", "so2_volcanic": "tc_VSO2",
+    "so2": "tcso2", "so2_volcanic": "tc_VSO2", "dust": "duaod550",
 }
 
 # PM2.5/PM10 are delivered in kg/m^3 (confirmed from the file's own `units`
@@ -86,6 +86,7 @@ _DU_MOLECULES_PER_M2 = 2.6867e20  # 1 Dobson Unit, standard definition
 _SO2_KG_M2_TO_DU = (1000.0 / _SO2_MOLAR_MASS_G_PER_MOL) * _AVOGADRO_PER_MOL / _DU_MOLECULES_PER_M2
 _UNIT_SCALE = {
     "pm2_5": 1e9, "pm10": 1e9, "aod": 1.0, "so2": _SO2_KG_M2_TO_DU, "so2_volcanic": _SO2_KG_M2_TO_DU,
+    "dust": 1.0,
 }
 
 # Flat, variable-prefixed setting key (pm2_5_min, aod_min, ...) -- same convention
@@ -98,7 +99,7 @@ _UNIT_SCALE = {
 # the volcanic one as two independent options that happen to share a leaf name.
 _MIN_SETTING_KEY = {
     "pm2_5": "pm2_5_min", "pm10": "pm10_min", "aod": "aod_min",
-    "so2": "so2_min", "so2_volcanic": "so2_min",
+    "so2": "so2_min", "so2_volcanic": "so2_min", "dust": "dust_min",
 }
 
 # Config fallback when the setting is unset -- a UX/policy default (what a fresh
@@ -122,7 +123,14 @@ _MIN_SETTING_KEY = {
 # smoothly-varying background), so a single low-activity snapshot's max badly
 # understates its real range. Don't re-derive a custom scale from one live snapshot
 # again without checking percentiles, not just min/max.
-_DEFAULT_MIN = {"pm2_5": 35, "pm10": 150, "aod": 0.5, "so2": 1.0, "so2_volcanic": 1.0}
+#
+# Dust's 0.1 is a plume-vs-background call from a real file (a live CAMS run: median
+# dust AOD 0.0008, p99 0.17, max 1.2): about 2% of the globe sits above 0.1, so Saharan,
+# Arabian and Gobi plumes show and background haze does not. Total AOD's 0.5 would
+# hide nearly all of it (only ~0.3% of cells exceeded 0.3).
+_DEFAULT_MIN = {
+    "pm2_5": 35, "pm10": 150, "aod": 0.5, "so2": 1.0, "so2_volcanic": 1.0, "dust": 0.1,
+}
 
 # The true physical minimum for each variable -- concentrations/AOD/SO2 can't go
 # negative, so this is always 0 for all five, REGARDLESS of what _DEFAULT_MIN ships
@@ -133,7 +141,7 @@ _DEFAULT_MIN = {"pm2_5": 35, "pm10": 150, "aod": 0.5, "so2": 1.0, "so2_volcanic"
 # of this would break the moment _DEFAULT_MIN stops being 0 for some variable (as AOD
 # and both SO2 variables are not) -- the two are deliberately kept as separate
 # constants so that never happens silently again.
-_NATURAL_FLOOR = {"pm2_5": 0, "pm10": 0, "aod": 0, "so2": 0, "so2_volcanic": 0}
+_NATURAL_FLOOR = {"pm2_5": 0, "pm10": 0, "aod": 0, "so2": 0, "so2_volcanic": 0, "dust": 0}
 
 # Fixed, non-configurable top of the colour gradient -- confirmed live against real
 # CAMS data (see the published spec's issue comments): AOD rarely exceeds ~2.5 even
@@ -148,7 +156,12 @@ _NATURAL_FLOOR = {"pm2_5": 0, "pm10": 0, "aod": 0, "so2": 0, "so2_volcanic": 0}
 # the way PM2.5/PM10/AOD's ceilings were. so2_volcanic reuses the same 20 DU ceiling
 # -- see _DEFAULT_MIN above for why (confirmed the right order of magnitude live,
 # despite being a different physical quantity from so2).
-_FIXED_CEILING = {"pm2_5": 250, "pm10": 400, "aod": 3, "so2": 20, "so2_volcanic": 20}
+#
+# Dust's 1.5 is above the strongest cell in the live run (1.2), so an ordinary plume
+# stays short of the top colour and a major Saharan event still has headroom.
+_FIXED_CEILING = {
+    "pm2_5": 250, "pm10": 400, "aod": 3, "so2": 20, "so2_volcanic": 20, "dust": 1.5,
+}
 
 # so2_volcanic's opacity/threshold settings are owned by Volcano Properties
 # ("volcanoes" config section, issue #254's "Show Smoke Plume" toggle), not
@@ -180,7 +193,14 @@ _AQI_CMAP = mcolors.LinearSegmentedColormap.from_list("aqi", _AQI_COLORS)
 # not blend into an ambient background layer.
 _VOLCANIC_SO2_COLORS = ["#00f3ff", "#2979ff", "#c400ff", "#ff00c8"]
 _VOLCANIC_SO2_CMAP = mcolors.LinearSegmentedColormap.from_list("volcanic_so2", _VOLCANIC_SO2_COLORS)
-_CMAP = {"so2_volcanic": _VOLCANIC_SO2_CMAP}
+
+# Dust reads as dust, not as a health index: pale sand through ochre and burnt orange
+# to dark brown. Dust only ever shares the picker with the other variables (never on
+# screen together with them), so unlike so2_volcanic it needn't avoid the AQI hues.
+# ui/modules/air_quality.js keeps its own copy of this list for the client-side legend.
+_DUST_COLORS = ["#f6e7b4", "#e8b85a", "#c9772b", "#8a4a1c", "#4e2a12"]
+_DUST_CMAP = mcolors.LinearSegmentedColormap.from_list("dust", _DUST_COLORS)
+_CMAP = {"so2_volcanic": _VOLCANIC_SO2_CMAP, "dust": _DUST_CMAP}
 
 
 class AirQualityUpdater(Updater):
