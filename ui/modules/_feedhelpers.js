@@ -141,6 +141,11 @@ function renderBlock(block) {
             return `<div style="font-weight:bold;color:#000;font-size:20px;margin-top:2px;">${block.html}</div>`;
         case 'text':
             return `<div style="margin-top:4px;line-height:1.35;${block.bold ? 'font-weight:bold;' : ''}">${escapeMaybe(block.text, block.raw)}</div>`;
+        case 'scrollText':
+            // Long free text from a feed (a WHO outbreak summary): escaped, its own line
+            // breaks kept, and scrolling inside the popup rather than stretching it.
+            return `<div style="margin-top:4px;line-height:1.35;white-space:pre-line;overflow-y:auto;` +
+                `max-height:${block.maxHeight || 240}px;padding-right:4px;">${escapeHtml(block.text)}</div>`;
         case 'notice':
             return `<div style="color:${block.color || '#c0392b'};font-size:11px;margin-top:4px;">${escapeMaybe(block.text, block.raw)}</div>`;
         case 'fallback':

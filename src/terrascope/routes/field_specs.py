@@ -266,6 +266,7 @@ _AQ_VARIABLE = SelectSpec([
     ("pm10", "PM10 (Unhealthy above 150 µg/m³)"),
     ("aod", "Smoke (AOD)"),
     ("so2", "SO2 (Sulphur Dioxide)"),
+    ("dust", "Dust (AOD)"),
 ], personalizable=True)
 
 # people/km², log-spaced -- see population_density's FIELD_SPECS entries.
@@ -459,6 +460,14 @@ FIELD_SPECS = {
     ("gdacs", "grace_days"): SliderSpec(
         min=1, max=14, step=1, suffix=" day", pluralize=True, personalizable=True
     ),
+    # Disease Outbreaks (collectors/disease_outbreaks.py, WHO Disease Outbreak News).
+    # active_days is a pure read-time filter over the shared rows (how recently an outbreak
+    # must have been reported to count as current), so it is personalizable. Its max matches
+    # the Housekeeper's disease_outbreaks_expiry_days default (180), the oldest report kept.
+    ("disease_outbreaks", "enabled"): _ENABLED_PERSONALIZABLE,
+    ("disease_outbreaks", "active_days"): SliderSpec(
+        min=1, max=180, step=1, suffix=" day", pluralize=True, personalizable=True
+    ),
     # Tsunami Warnings (collectors/tsunami.py). include_information gates what
     # TsunamiCollector stores (shared collection control, so NOT personalizable). grace_days
     # is a pure read-time filter over the shared rows (how long an expired bulletin stays
@@ -598,6 +607,11 @@ FIELD_SPECS = {
     # opacity are settings.
     ("sea_ice", "enabled"): _ENABLED_PERSONALIZABLE,
     ("sea_ice", "opacity"): _OPACITY,
+    # Soil Moisture (NASA SMAP L4 root-zone percentile, tasks/soil_moisture.py): a raw
+    # data texture; the diverging colour ramp is fixed client-side, so only visibility
+    # and opacity are settings.
+    ("soil_moisture", "enabled"): _ENABLED_PERSONALIZABLE,
+    ("soil_moisture", "opacity"): _OPACITY,
     # Aurora (NOAA SWPC OVATION, tasks/aurora.py): a raw data texture; the colour ramp
     # and the 5% cutoff are fixed client-side, so only visibility and opacity are settings.
     ("aurora", "enabled"): _ENABLED_PERSONALIZABLE,
@@ -864,6 +878,7 @@ FIELD_SPECS = {
     # ("volcanoes", "so2_min") above, which now belongs to the separate
     # volcanic-specific SO2 variable Smoke Plume renders instead.
     ("air_quality", "so2_min"): SliderSpec(min=0, max=20, step=0.5, decimals=1, suffix=" DU"),
+    ("air_quality", "dust_min"): SliderSpec(min=0, max=1.5, step=0.05, decimals=2),
     # --- Flood Risk (issue #371) -- both mode's variants render every cycle
     # regardless of the configured mode (FloodRiskUpdater.run(), same "render
     # everything, publish only what's selected" shape as GHG's species/mode), and

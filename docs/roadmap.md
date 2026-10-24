@@ -48,9 +48,9 @@ built and then dropped: the GIBS Black Marble daily product has swath and wedge 
 
 1. Aurora and space weather (OVATION aurora oval; built, a Kp readout is left out)
 2. Sea ice (NOAA OISST ice concentration; built)
-3. Dust and aerosols
-4. Soil moisture and drought
-5. WHO disease outbreaks
+3. Dust and aerosols (built as a CAMS dust AOD variable in Air Quality)
+4. Soil moisture and drought (NASA SMAP L4 root-zone percentile; built)
+5. WHO disease outbreaks (WHO Disease Outbreak News; built)
 
 The remaining candidates below stay as the backlog.
 

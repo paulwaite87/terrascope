@@ -270,6 +270,7 @@
     "pm10_min": 150,
     "aod_min": 0.5,
     "so2_min": 1.0,
+    "dust_min": 0.1,
     "runs_per_day": 24
   },
   "shipping": {
@@ -317,6 +318,16 @@
     "opacity": 70,
     "runs_per_day": 2
   },
+  "soil_moisture": {
+    "enabled": false,
+    "opacity": 70,
+    "runs_per_day": 4
+  },
+  "disease_outbreaks": {
+    "enabled": false,
+    "active_days": 45,
+    "runs_per_day": 4
+  },
   "aurora": {
     "enabled": false,
     "opacity": 70,
@@ -347,6 +358,8 @@
       "currents": "https://nomads.ncep.noaa.gov/pub/data/nccf/com/rtofs/prod/",
       "sst": "https://downloads.psl.noaa.gov/Datasets/noaa.oisst.v2.highres",
       "sea_ice": "https://downloads.psl.noaa.gov/Datasets/noaa.oisst.v2.highres",
+      "soil_moisture": "https://cmr.earthdata.nasa.gov/search/granules.json",
+      "disease_outbreaks": "https://www.who.int/api/news/diseaseoutbreaknews",
       "clouds": "https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi",
       "cams_ads": "https://ads.atmosphere.copernicus.eu/api",
       "jtwc": "https://www.ssd.noaa.gov/PS/TROP/DATA/ATCF/JTWC/",
@@ -375,6 +388,8 @@
       "rtofs_currents": true,
       "sst": true,
       "sea_ice": true,
+      "soil_moisture": true,
+      "disease_outbreaks": true,
       "clouds": true,
       "ghg_forecast": true,
       "ghg_egg4_baseline": true,
@@ -441,6 +456,7 @@
     "world_events_expiry_days": 14,
     "gdacs_expiry_days": 7,
     "tsunami_expiry_days": 7,
+    "disease_outbreaks_expiry_days": 180,
     "internet_outages_expiry_days": 7,
     "frontline_expiry_days": 60,
     "dry_run": false,

@@ -841,3 +841,27 @@ class CountryIndicatorValue(Base):
     country_code: Mapped[str] = mapped_column(String(3), primary_key=True)
     year: Mapped[int] = mapped_column(Integer, nullable=False)
     value: Mapped[float] = mapped_column(Double, nullable=False)
+
+
+class DiseaseOutbreakReport(Base):
+    """A WHO Disease Outbreak News report, one row per report (DonId). `countries` are the map
+    names (lib/country_places.py) its title names, `ended` those its summary says have
+    declared their outbreak over. Which reports make an outbreak "current" is decided
+    when the layer is read (lib/disease_outbreaks.py), so nothing here is time-sensitive.
+    """
+
+    __tablename__ = "disease_outbreak_reports"
+    __table_args__ = (Index("idx_disease_outbreak_reports_published", "published"),)
+
+    don_id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    title: Mapped[str] = mapped_column(Text)
+    disease: Mapped[str] = mapped_column(Text)
+    disease_key: Mapped[str] = mapped_column(Text)
+    kind: Mapped[str] = mapped_column(String(12))
+    countries: Mapped[list] = mapped_column(JSONB)
+    ended: Mapped[list] = mapped_column(JSONB)
+    ends_unplaced: Mapped[bool] = mapped_column(Boolean)
+    published: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    modified: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    summary: Mapped[str] = mapped_column(Text)
+    url_name: Mapped[str] = mapped_column(Text)

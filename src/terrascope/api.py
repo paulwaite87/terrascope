@@ -15,6 +15,7 @@ from terrascope.routes import (
     volcanoes,
     quakes,
     gdacs,
+    disease_outbreaks,
     tsunami,
     internet_outages,
     fires,
@@ -103,6 +104,7 @@ app.include_router(storms.router)
 app.include_router(volcanoes.router)
 app.include_router(quakes.router)
 app.include_router(gdacs.router)
+app.include_router(disease_outbreaks.router)
 app.include_router(tsunami.router)
 app.include_router(internet_outages.router)
 app.include_router(fires.router)

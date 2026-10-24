@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Copernicus CAMS PM2.5/PM10/smoke-AOD/SO2(x2) source for the air_quality layer, via
+"""Copernicus CAMS PM2.5/PM10/smoke-AOD/SO2(x2)/dust-AOD source for the air_quality layer, via
 the CDS API (CDSAPI_KEY) -- same submit-then-poll mechanics, credential resolution, and
 bounded timeout as CamsGhgForecastCollector (collectors/greenhouse_gases.py), shared
 via lib/cds_client.py rather than re-implemented here.
@@ -35,6 +35,10 @@ stays a selectable Air Quality Variable option; volcanic SO2 backs Smoke Plume
 exclusively (see tasks/air_quality.py's _SETTINGS_SECTION_OVERRIDE). Both fetched
 unconditionally regardless of whether Air Quality or Volcanoes is the layer currently
 enabled -- this collector has no knowledge of either layer's settings, same as before.
+
+Dust AOD, a 6th variable in the same combined request: `dust_aerosol_optical_depth_550nm`,
+a single-level variable (in-file "duaod550"), confirmed live against a real downloaded
+file -- 0.4 deg global grid, longitude 0..359.6, about 2.5 MB for three lead times.
 """
 import logging
 from datetime import datetime, timedelta, timezone
@@ -57,6 +61,7 @@ _CAMS_FORECAST_VARS = (
     "total_aerosol_optical_depth_550nm",
     "total_column_sulphur_dioxide",
     "total_column_volcanic_sulphur_dioxide",
+    "dust_aerosol_optical_depth_550nm",
 )
 # CAMS issues two atmospheric-composition forecast runs per day (00Z/12Z), unlike
 # greenhouse_gases' one-run/day dataset -- the newest run isn't always published yet

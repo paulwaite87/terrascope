@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""AirQualityUpdater.run() orchestration: renders all 5 variables (pm2_5, pm10, aod,
-so2, so2_volcanic) every cycle, skipping ones already fresh, and publishes only the
+"""AirQualityUpdater.run() orchestration: renders all 6 variables (pm2_5, pm10, aod,
+so2, so2_volcanic, dust) every cycle, skipping ones already fresh, and publishes only the
 currently-configured variable -- directly mirroring
 tests/test_greenhouse_gases_updater.py's GhgUpdater tests, minus the anomaly/baseline
 axis (this layer is Absolute-only). plot() itself is mocked throughout: this seam
@@ -46,16 +46,16 @@ def _current_nc(tmp_path):
     return camsforecast_cache_path(str(tmp_path))
 
 
-def test_run_renders_all_five_variables_to_separate_paths(tmp_path):
+def test_run_renders_all_six_variables_to_separate_paths(tmp_path):
     _touch(_current_nc(tmp_path))
     out_path = tmp_path / "data" / "air_quality.png"
 
     u = make_bare_aq_updater("pm2_5", str(tmp_path), str(out_path))
     u.run()
 
-    assert u.plot.call_count == 5
+    assert u.plot.call_count == 6
     called = {call.args[0] for call in u.plot.call_args_list}
-    assert called == {"pm2_5", "pm10", "aod", "so2", "so2_volcanic"}
+    assert called == {"pm2_5", "pm10", "aod", "so2", "so2_volcanic", "dust"}
 
 
 def test_run_skips_a_variable_whose_plot_raises_but_still_renders_the_rest(tmp_path):
@@ -78,13 +78,13 @@ def test_run_skips_a_variable_whose_plot_raises_but_still_renders_the_rest(tmp_p
     u.run()
 
     called = {call.args[0] for call in u.plot.call_args_list}
-    assert called == {"pm2_5", "pm10", "aod", "so2", "so2_volcanic"}
+    assert called == {"pm2_5", "pm10", "aod", "so2", "so2_volcanic", "dust"}
     # plot() itself is mocked (doesn't write a real PNG) -- _write_render_signature's
     # '.sig' sidecar is the real signal of "this variable's render succeeded and was
     # recorded", same mechanism _is_render_fresh reads on the next cycle.
     so2_volcanic_sig = tmp_path / "data" / "air_quality_so2_volcanic.png.sig"
     assert not so2_volcanic_sig.exists()
-    for variable in ("pm2_5", "pm10", "aod", "so2"):
+    for variable in ("pm2_5", "pm10", "aod", "so2", "dust"):
         assert (tmp_path / "data" / f"air_quality_{variable}.png.sig").exists()
 
 
@@ -110,7 +110,7 @@ def test_run_skips_a_variable_whose_output_is_already_fresh(tmp_path):
 
     called = {call.args[0] for call in u.plot.call_args_list}
     assert "pm2_5" not in called
-    assert len(called) == 4
+    assert len(called) == 5
 
 
 def test_run_re_renders_a_variable_whose_output_is_data_fresh_but_settings_changed(tmp_path):
@@ -171,3 +171,46 @@ def test_so2_volcanic_settings_section_defaults_to_empty_dict_when_volcanoes_sec
     u.config.get_section.return_value = None
 
     assert u._settings_for("so2_volcanic") == {}
+
+
+def test_dust_is_skipped_when_the_cache_predates_it_but_the_other_variables_still_render(tmp_path):
+    """A cache file written before dust joined the request has no dust variable, so
+    plotting it raises. That must cost only dust's own render (retried next cycle,
+    once the collector has refetched), never the rest of the cycle."""
+    _touch(_current_nc(tmp_path))
+    out_path = tmp_path / "data" / "air_quality.png"
+
+    u = make_bare_aq_updater("pm2_5", str(tmp_path), str(out_path))
+    u.plot = MagicMock(side_effect=lambda variable, *a: (_ for _ in ()).throw(
+        KeyError("duaod550")) if variable == "dust" else None)
+
+    u.run()
+
+    assert not (tmp_path / "data" / "air_quality_dust.png.sig").exists()
+    for variable in ("pm2_5", "pm10", "aod", "so2", "so2_volcanic"):
+        assert (tmp_path / "data" / f"air_quality_{variable}.png.sig").exists()
+
+
+def test_run_publishes_dust_when_it_is_the_configured_variable(tmp_path):
+    _touch(_current_nc(tmp_path))
+    out_path = tmp_path / "data" / "air_quality.png"
+
+    u = make_bare_aq_updater("dust", str(tmp_path), str(out_path))
+    u.run()
+
+    u._publish_variant.assert_called_once_with(
+        str(tmp_path / "data" / "air_quality_dust.png")
+    )
+
+
+def test_changing_the_dust_minimum_forces_a_dust_re_render_and_the_aod_minimum_does_not(tmp_path):
+    out_path = tmp_path / "data" / "air_quality.png"
+    u = make_bare_aq_updater("dust", str(tmp_path), str(out_path))
+    u.settings = {"dust_min": 0.1, "aod_min": 0.5}
+    before = u._variable_settings_signature("dust")
+
+    u.settings = {"dust_min": 0.4, "aod_min": 0.5}
+    assert u._variable_settings_signature("dust") != before
+
+    u.settings = {"dust_min": 0.1, "aod_min": 2.0}
+    assert u._variable_settings_signature("dust") == before

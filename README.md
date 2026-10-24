@@ -217,7 +217,7 @@ group, and/or `Air Quality` under the `Events` group.
 This is optional.
 It's for [Flood Risk](#flood-risk)'s `Live` mode (observed current flooding) — `Historical`
 mode needs no credential at all, so the layer still works without this if you'd rather
-skip it.
+skip it — and for the [Soil Moisture](#soil-moisture) layer, which stays disabled without it.
 
 Register a free account at https://urs.earthdata.nasa.gov, log in, open your profile,
 and use `Generate Token` to create a Bearer token. Put it in `.env` as `EARTHDATA_TOKEN`.
@@ -319,19 +319,21 @@ The full list is:
 * UV Index (modelled sun UV strength, in the standard WHO bands)
 * Aurora (NOAA's live aurora probability, with the observation and forecast times)
 * Sea Ice (NOAA's daily sea-ice concentration, pale blue to white)
+* Soil Moisture (NASA SMAP root-zone soil moisture, drier or wetter than normal)
 * Storm watch
 * Greenhouse gases (CO2/CH4)
 * Lightning strikes
 * Active storms
 * Earthquakes
 * GDACS Alerts (floods, droughts, cyclones and other disasters, rated by impact)
+* Disease Outbreaks (WHO's current outbreak reports, by country)
 * Tsunami Warnings (official NOAA advisories, watches and warnings, with the affected coastal zones)
 * Internet Outages (countries where the internet is failing, shaded by how many detection signals agree)
 * Volcanoes (with a Smoke Plume/SO2 overlay)
 * Wildfires
 * World Events (conflict, explosions and high-level diplomacy)
 * Ukraine Frontline (DeepStateMap.live's occupied / contested areas)
-* Air Quality (PM2.5/PM10/Smoke/SO2)
+* Air Quality (PM2.5/PM10/Smoke/SO2/Dust)
 * Flood Risk (live observed inundation / historical hazard)
 * Shipping
 * Flight Radar
@@ -509,6 +511,42 @@ GDACS content is available under the European Commission's reuse terms (generall
 CC BY 4.0), so credit is shown in every popup. GDACS itself describes its information as
 purely indicative and not for decision-making without other sources, and our footprints are
 simplified, so treat this as an overview rather than an authority.
+
+#### Disease Outbreaks
+The World Health Organization's [Disease Outbreak News](https://www.who.int/emergencies/disease-outbreak-news)
+(DON) is where WHO announces outbreaks of international concern: Ebola and Marburg, MERS,
+Nipah, avian influenza and the like. This layer puts a marker on **each country a current
+report names**. Hover a marker for WHO's own summary of the report — in full, scrolling if it
+is long — the date, and a link to the full report on WHO's site. No API key is needed.
+
+"Current" means two things together: the latest report about that disease in that country was
+published within **Days to count as current** (`active_days`, 45 by default, and it is your own
+setting), and it does not declare the outbreak over. WHO publishes a report when an outbreak is
+announced, when it changes and when it ends, so an outbreak with a newer report shows that one,
+a country that WHO says has ended its outbreak loses its marker (even when the report is mainly
+about another country: the Ebola report that said Uganda had declared its end did not hide the
+DRC), and a one-off event stays up for the full window. The map is often sparse — a handful of
+markers at most — and that is accurate, not a fault.
+
+Limits:
+
+* WHO's reports have no coordinates, only a title, so each marker sits at the **country's
+  centre point**, not at the outbreak's site; the popup says so.
+* A report that names no single country — a **Global** situation report, a **Multi-country**
+  cluster, or a WHO **Region** such as AFRO — cannot be placed. Such a report that is current
+  appears in a collapsed **Not on the map** list in the legend instead, with the same summary
+  and link.
+* Titles are matched to countries by name (WHO's formal names such as "Kingdom of Saudi Arabia"
+  or "Viet Nam" are understood). A territory that is not a country on the map, such as La
+  Réunion or Mayotte, is skipped and noted in the log rather than put on the wrong country.
+* WHO's older archive (back to 1996) is ignored: only reports with a summary from the last
+  few months are kept, and the Housekeeper deletes reports older than 180 days.
+* Terrascope checks four times a day (`runs_per_day`, editable on the Data Status page).
+  If WHO is unreachable the markers stay as they were.
+
+WHO's content is generally published under a non-commercial, share-alike licence; every popup
+credits WHO and links to the report. Check WHO's terms of use before relying on this layer
+commercially.
 
 #### Tsunami Warnings
 The two NOAA tsunami warning centres (the Pacific centre in Honolulu and the National centre
@@ -692,12 +730,19 @@ global atmospheric composition forecast. A `Variable` selector switches between:
   volcano-specific SO2 field instead. Rendered in the same green-to-purple gradient as
   `PM2.5`/`PM10`/`Smoke (AOD)` above, deliberately distinct from Smoke Plume's own
   cyan-to-magenta palette.
+* `Dust (AOD)` — Dust Aerosol Optical Depth at 550 nm, the part of the column's haze that
+  is mineral dust: Saharan, Arabian and Gobi plumes. Dimensionless, like `Smoke (AOD)`.
+  Rendered in its own pale-sand-to-dark-brown palette so it reads as dust and not as a
+  health index. Its `Critical threshold` defaults to 0.1 (a plume, not background haze) and
+  the scale tops out at 1.5. It is a modelled forecast, not an observation. An install
+  that collected before dust was added shows no dust until its next Air Quality
+  collection.
 
 The `PM2.5`/`PM10` dropdown entries show the concentration widely considered "Unhealthy
 for Sensitive Groups" by the US EPA's Air Quality Index, and that same value is the
 default for the `Critical threshold` slider — readings below it fade out via a smooth
 transparency ramp, so the map highlights genuinely elevated readings rather than
-colourising the whole globe. All four variables render every cycle, so switching
+colourising the whole globe. All six variables render every cycle, so switching
 between them in the config UI applies instantly, no render wait. Colours follow the
 familiar green → yellow → orange → red → purple AQI convention used by most phone
 weather apps' air-quality widgets.
@@ -829,6 +874,29 @@ picture stays up with its original date. Early in January, before NOAA has publi
 new year's file, the last days of the previous year are shown. It is NOAA's coarser
 quarter-degree analysis, so the ice edge is smooth rather than detailed.
 
+#### Soil Moisture
+How dry or wet the ground is compared with what is normal for that place: NASA SMAP's
+root-zone (0 to 100 cm) soil moisture, shown as a **percentile** from 0 (driest on record
+for that location) to 100 (wettest). Deep red-brown marks unusually dry ground, the
+pale neutral in the middle is near normal, and blue marks unusually wet ground. The scale is
+fixed, so a colour always means the same thing. Because it is relative to each place's own
+history, a desert is not flagged as a drought, and it pairs well with [Flood
+Risk](#flood-risk), Wildfires and Precipitation.
+
+It shows one picture: the **latest SMAP granule**, which is usually three to four days old,
+and the legend states its date and time (UTC). It needs a
+[NASA Earthdata Login Token](#nasa-earthdata-login-token); without one the layer shows as
+deactivated in the config page. Terrascope checks four times a day (`runs_per_day`,
+editable on the Data Status page), downloads only the one variable it needs (about 25 MB
+rather than the 145 MB granule), and skips the download when it already holds the newest
+granule. If NASA is unreachable the previous picture stays up with its original time.
+
+Limits: the percentile only exists over vegetated, unfrozen land, so deserts (the Sahara,
+Arabia, the Gobi, inland Australia), ice sheets and frozen ground are left blank rather
+than guessed. It is measured against SMAP's own record of a few years, so read it as
+"drier or wetter than normal for the SMAP record", not as an official drought
+classification.
+
 #### Storm Watch
 This layer shows where there is a likelihood of a storm forming. It uses the CAPE
 measurement (Convective Available Potential Energy) which, as the name suggests is
@@ -942,6 +1010,7 @@ The data collector is a separate background process which collects data for:
   * PM10 - Coarse Particulate Matter 10 microns
   * Smoke AOD - Aerosol Optical Depth of smoke from fire
   * SO2 - Sulphur Dioxide from all sources
+  * Dust AOD - Aerosol Optical Depth of mineral dust
 * GFS Atmos:
   * Isobars
   * Precipitation
@@ -953,6 +1022,7 @@ The data collector is a separate background process which collects data for:
 * Clouds
 * Aurora (NOAA SWPC OVATION)
 * Sea Ice (NOAA OISST)
+* Soil Moisture (NASA SMAP L4)
 * Waves
 * Currents
 * Shipping

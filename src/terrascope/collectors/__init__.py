@@ -99,12 +99,14 @@ from .satellites import SatellitesCollector
 from .markers_sync import MarkersSyncCollector
 from .world_events import WorldEventsCollector
 from .gdacs import GdacsCollector
+from .disease_outbreaks import DiseaseOutbreaksCollector
 from .tsunami import TsunamiCollector
 from .internet_outages import InternetOutagesCollector
 from terrascope.collectors.sst import SstCollector
 from terrascope.collectors.clouds import CloudsCollector
 from terrascope.collectors.aurora import AuroraCollector
 from terrascope.collectors.sea_ice import SeaIceCollector
+from terrascope.collectors.soil_moisture import SoilMoistureCollector
 from terrascope.collectors.greenhouse_gases import (
     CamsEgg4BaselineCollector,
     CamsGhgForecastCollector,
@@ -132,6 +134,7 @@ COLLECTORS = (
     MarkersSyncCollector,
     WorldEventsCollector,
     GdacsCollector,
+    DiseaseOutbreaksCollector,
     TsunamiCollector,
     InternetOutagesCollector,
     FrontlineCollector,
@@ -146,6 +149,7 @@ CACHE_COLLECTORS = (
     CloudsCollector,
     AuroraCollector,
     SeaIceCollector,
+    SoilMoistureCollector,
     CamsGhgForecastCollector,
     CamsEgg4BaselineCollector,
     AirQualityCollector,
