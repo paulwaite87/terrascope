@@ -217,7 +217,7 @@ group, and/or `Air Quality` under the `Events` group.
 This is optional.
 It's for [Flood Risk](#flood-risk)'s `Live` mode (observed current flooding) — `Historical`
 mode needs no credential at all, so the layer still works without this if you'd rather
-skip it.
+skip it — and for the [Soil Moisture](#soil-moisture) layer, which stays disabled without it.
 
 Register a free account at https://urs.earthdata.nasa.gov, log in, open your profile,
 and use `Generate Token` to create a Bearer token. Put it in `.env` as `EARTHDATA_TOKEN`.
@@ -319,6 +319,7 @@ The full list is:
 * UV Index (modelled sun UV strength, in the standard WHO bands)
 * Aurora (NOAA's live aurora probability, with the observation and forecast times)
 * Sea Ice (NOAA's daily sea-ice concentration, pale blue to white)
+* Soil Moisture (NASA SMAP root-zone soil moisture, drier or wetter than normal)
 * Storm watch
 * Greenhouse gases (CO2/CH4)
 * Lightning strikes
@@ -836,6 +837,29 @@ picture stays up with its original date. Early in January, before NOAA has publi
 new year's file, the last days of the previous year are shown. It is NOAA's coarser
 quarter-degree analysis, so the ice edge is smooth rather than detailed.
 
+#### Soil Moisture
+How dry or wet the ground is compared with what is normal for that place: NASA SMAP's
+root-zone (0 to 100 cm) soil moisture, shown as a **percentile** from 0 (driest on record
+for that location) to 100 (wettest). Deep red-brown marks unusually dry ground, the
+pale neutral in the middle is near normal, and blue marks unusually wet ground. The scale is
+fixed, so a colour always means the same thing. Because it is relative to each place's own
+history, a desert is not flagged as a drought, and it pairs well with [Flood
+Risk](#flood-risk), Wildfires and Precipitation.
+
+It shows one picture: the **latest SMAP granule**, which is usually three to four days old,
+and the legend states its date and time (UTC). It needs a
+[NASA Earthdata Login Token](#nasa-earthdata-login-token); without one the layer shows as
+deactivated in the config page. Terrascope checks four times a day (`runs_per_day`,
+editable on the Data Status page), downloads only the one variable it needs (about 25 MB
+rather than the 145 MB granule), and skips the download when it already holds the newest
+granule. If NASA is unreachable the previous picture stays up with its original time.
+
+Limits: the percentile only exists over vegetated, unfrozen land, so deserts (the Sahara,
+Arabia, the Gobi, inland Australia), ice sheets and frozen ground are left blank rather
+than guessed. It is measured against SMAP's own record of a few years, so read it as
+"drier or wetter than normal for the SMAP record", not as an official drought
+classification.
+
 #### Storm Watch
 This layer shows where there is a likelihood of a storm forming. It uses the CAPE
 measurement (Convective Available Potential Energy) which, as the name suggests is
@@ -961,6 +985,7 @@ The data collector is a separate background process which collects data for:
 * Clouds
 * Aurora (NOAA SWPC OVATION)
 * Sea Ice (NOAA OISST)
+* Soil Moisture (NASA SMAP L4)
 * Waves
 * Currents
 * Shipping

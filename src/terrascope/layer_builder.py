@@ -27,6 +27,7 @@ from terrascope.tasks.common import MapData, LAYER_CYCLE_SECONDS, MultiHourRende
 from terrascope.tasks.clouds import CloudUpdater
 from terrascope.tasks.aurora import AuroraUpdater
 from terrascope.tasks.sea_ice import SeaIceUpdater
+from terrascope.tasks.soil_moisture import SoilMoistureUpdater
 from terrascope.tasks.isobars import IsobarUpdater
 from terrascope.tasks.wind import WindUpdater
 from terrascope.tasks.precipitation import PrecipitationUpdater
@@ -68,6 +69,7 @@ TASK_CLASSES = {
     "clouds": CloudUpdater,
     "aurora": AuroraUpdater,
     "sea_ice": SeaIceUpdater,
+    "soil_moisture": SoilMoistureUpdater,
     "wind": WindUpdater,
     "sst": SSTUpdater,
     "greenhouse_gases": GhgUpdater,
