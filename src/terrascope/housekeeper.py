@@ -26,6 +26,7 @@ from terrascope.db.aircraft_adapter import AircraftAdapter
 from terrascope.db.volcanic_activity_adapter import VolcanicActivityAdapter
 from terrascope.db.world_event_adapter import WorldEventAdapter
 from terrascope.db.frontline_adapter import FrontlineAdapter
+from terrascope.db.disease_outbreaks_adapter import DiseaseOutbreaksAdapter
 from terrascope.db.gdacs_adapter import GdacsAdapter
 from terrascope.db.tsunami_adapter import TsunamiAdapter
 from terrascope.db.internet_outages_adapter import InternetOutagesAdapter
@@ -252,6 +253,24 @@ class Housekeeper:
                 )
         except Exception as e:
             logger.warning(f"Housekeeper: GDACS prune failed: {e}")
+
+    def prune_expired_disease_outbreaks(self, expiry_days: float):
+        """Prune WHO Disease Outbreak News reports published more than expiry_days ago
+        (0/missing -> keep forever). DiseaseOutbreaksCollector only ever upserts; this is
+        the only place the table shrinks. Defaults to 180 days (see run()), far past the
+        layer's own window (`active_days`, 45 by default), so pruning never removes anything
+        a viewer could still see."""
+        if not expiry_days or expiry_days <= 0:
+            return
+        try:
+            deleted = DiseaseOutbreaksAdapter().prune_expired(expiry_days)
+            if deleted:
+                logger.info(
+                    f"Housekeeper pruned {deleted} disease outbreak report(s) older than "
+                    f"{expiry_days:g}d."
+                )
+        except Exception as e:
+            logger.warning(f"Housekeeper: disease outbreaks prune failed: {e}")
 
     def prune_expired_tsunami_events(self, expiry_days: float):
         """Prune tsunami events whose bulletin expired more than expiry_days ago
@@ -482,6 +501,10 @@ class Housekeeper:
                     self.prune_expired_world_events(world_events_expiry_d)
                     gdacs_expiry_d = float(self.settings.get("gdacs_expiry_days", 7))
                     self.prune_expired_gdacs_events(gdacs_expiry_d)
+                    disease_outbreaks_expiry_d = float(
+                        self.settings.get("disease_outbreaks_expiry_days", 180)
+                    )
+                    self.prune_expired_disease_outbreaks(disease_outbreaks_expiry_d)
                     tsunami_expiry_d = float(self.settings.get("tsunami_expiry_days", 7))
                     self.prune_expired_tsunami_events(tsunami_expiry_d)
                     internet_outages_expiry_d = float(

@@ -460,6 +460,14 @@ FIELD_SPECS = {
     ("gdacs", "grace_days"): SliderSpec(
         min=1, max=14, step=1, suffix=" day", pluralize=True, personalizable=True
     ),
+    # Disease Outbreaks (collectors/disease_outbreaks.py, WHO Disease Outbreak News).
+    # active_days is a pure read-time filter over the shared rows (how recently an outbreak
+    # must have been reported to count as current), so it is personalizable. Its max matches
+    # the Housekeeper's disease_outbreaks_expiry_days default (180), the oldest report kept.
+    ("disease_outbreaks", "enabled"): _ENABLED_PERSONALIZABLE,
+    ("disease_outbreaks", "active_days"): SliderSpec(
+        min=1, max=180, step=1, suffix=" day", pluralize=True, personalizable=True
+    ),
     # Tsunami Warnings (collectors/tsunami.py). include_information gates what
     # TsunamiCollector stores (shared collection control, so NOT personalizable). grace_days
     # is a pure read-time filter over the shared rows (how long an expired bulletin stays
