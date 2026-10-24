@@ -253,6 +253,14 @@ def _build_config_data() -> dict:
             data["air_quality"]["enabled"] = False
             data["air_quality"]["RULE__missing_cdsapi_key"] = True
 
+    if "soil_moisture" in data:
+        # SMAP's OPeNDAP service takes the Earthdata bearer token on every request, so
+        # without one the whole layer is deactivated (unlike flood_risk, which only
+        # needs it for Live mode).
+        if not earthdata_token:
+            data["soil_moisture"]["enabled"] = False
+            data["soil_moisture"]["RULE__missing_earthdata_token"] = True
+
     if "flood_risk" in data:
         # Only Live mode (NASA LANCE MODIS observed flooding) needs EARTHDATA_TOKEN --
         # Historical mode (JRC hazard maps, static/no-auth) needs no credential at
@@ -399,6 +407,8 @@ async def update_config(payload: dict, admin: dict = Depends(require_admin)):
         payload["air_quality"].pop("RULE__missing_cdsapi_key", None)
     if "flood_risk" in payload:
         payload["flood_risk"].pop("RULE__missing_earthdata_token", None)
+    if "soil_moisture" in payload:
+        payload["soil_moisture"].pop("RULE__missing_earthdata_token", None)
 
     # outfile is injected read-time-only by _build_config_data() (see OUTFILES/
     # lib/output_files.py) -- never a real stored setting. Strip it the same way the

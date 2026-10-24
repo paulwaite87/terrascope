@@ -105,6 +105,7 @@ from terrascope.collectors.sst import SstCollector
 from terrascope.collectors.clouds import CloudsCollector
 from terrascope.collectors.aurora import AuroraCollector
 from terrascope.collectors.sea_ice import SeaIceCollector
+from terrascope.collectors.soil_moisture import SoilMoistureCollector
 from terrascope.collectors.greenhouse_gases import (
     CamsEgg4BaselineCollector,
     CamsGhgForecastCollector,
@@ -146,6 +147,7 @@ CACHE_COLLECTORS = (
     CloudsCollector,
     AuroraCollector,
     SeaIceCollector,
+    SoilMoistureCollector,
     CamsGhgForecastCollector,
     CamsEgg4BaselineCollector,
     AirQualityCollector,

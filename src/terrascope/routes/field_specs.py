@@ -599,6 +599,11 @@ FIELD_SPECS = {
     # opacity are settings.
     ("sea_ice", "enabled"): _ENABLED_PERSONALIZABLE,
     ("sea_ice", "opacity"): _OPACITY,
+    # Soil Moisture (NASA SMAP L4 root-zone percentile, tasks/soil_moisture.py): a raw
+    # data texture; the diverging colour ramp is fixed client-side, so only visibility
+    # and opacity are settings.
+    ("soil_moisture", "enabled"): _ENABLED_PERSONALIZABLE,
+    ("soil_moisture", "opacity"): _OPACITY,
     # Aurora (NOAA SWPC OVATION, tasks/aurora.py): a raw data texture; the colour ramp
     # and the 5% cutoff are fixed client-side, so only visibility and opacity are settings.
     ("aurora", "enabled"): _ENABLED_PERSONALIZABLE,
