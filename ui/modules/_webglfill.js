@@ -201,7 +201,7 @@ function meshLatEdges() {
 
 // The mesh as flat [lon, lat, ...] pairs, two triangles per cell, tiled across
 // WORLD_COPIES' extra +-360 degree strips (see that constant's own docstring).
-function fillMeshVertices() {
+export function fillMeshVertices() {
     const verts = [];
     const dLon = 360 / MESH_COLS;
     const edges = meshLatEdges();
@@ -218,7 +218,6 @@ function fillMeshVertices() {
     }
     return verts;
 }
-export { fillMeshVertices };
 
 // Build the lon/lat mesh (two triangles per cell), tiled across WORLD_COPIES' extra
 // +-360 degree strips (see that constant's own docstring). Shared by createFillLayer
