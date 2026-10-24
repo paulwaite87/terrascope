@@ -266,6 +266,39 @@ describe('buildPopupHtml', () => {
         });
     });
 
+    describe('scrollText block', () => {
+        test('escapes the text, so an external feed cannot inject markup', () => {
+            const html = buildPopupHtml({
+                title: { text: 'X' },
+                blocks: [{ type: 'scrollText', text: '<img src=x onerror=alert(1)> & more' }],
+            });
+            expect(html).toContain('&lt;img src=x onerror=alert(1)&gt; &amp; more');
+            expect(html).not.toContain('<img');
+        });
+
+        test('keeps the text\'s own line breaks, including Windows ones', () => {
+            const html = buildPopupHtml({
+                title: { text: 'X' },
+                blocks: [{ type: 'scrollText', text: 'First paragraph.\r\nSecond paragraph.' }],
+            });
+            expect(html).toContain('white-space:pre-line');
+            expect(html).toContain('First paragraph.\r\nSecond paragraph.');
+        });
+
+        test('scrolls inside the popup instead of growing it, 240px by default', () => {
+            const html = buildPopupHtml({ title: { text: 'X' }, blocks: [{ type: 'scrollText', text: 'a' }] });
+            expect(html).toContain('max-height:240px');
+            expect(html).toContain('overflow-y:auto');
+        });
+
+        test('maxHeight sets how tall the region may grow', () => {
+            const html = buildPopupHtml({
+                title: { text: 'X' }, blocks: [{ type: 'scrollText', text: 'a', maxHeight: 120 }],
+            });
+            expect(html).toContain('max-height:120px');
+        });
+    });
+
     describe('text block', () => {
         test('raw:true passes caller-built (already escaped) HTML through', () => {
             const html = buildPopupHtml({

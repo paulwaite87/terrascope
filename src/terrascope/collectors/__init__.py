@@ -99,6 +99,7 @@ from .satellites import SatellitesCollector
 from .markers_sync import MarkersSyncCollector
 from .world_events import WorldEventsCollector
 from .gdacs import GdacsCollector
+from .disease_outbreaks import DiseaseOutbreaksCollector
 from .tsunami import TsunamiCollector
 from .internet_outages import InternetOutagesCollector
 from terrascope.collectors.sst import SstCollector
@@ -133,6 +134,7 @@ COLLECTORS = (
     MarkersSyncCollector,
     WorldEventsCollector,
     GdacsCollector,
+    DiseaseOutbreaksCollector,
     TsunamiCollector,
     InternetOutagesCollector,
     FrontlineCollector,

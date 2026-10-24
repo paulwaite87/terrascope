@@ -326,6 +326,7 @@ The full list is:
 * Active storms
 * Earthquakes
 * GDACS Alerts (floods, droughts, cyclones and other disasters, rated by impact)
+* Disease Outbreaks (WHO's current outbreak reports, by country)
 * Tsunami Warnings (official NOAA advisories, watches and warnings, with the affected coastal zones)
 * Internet Outages (countries where the internet is failing, shaded by how many detection signals agree)
 * Volcanoes (with a Smoke Plume/SO2 overlay)
@@ -510,6 +511,42 @@ GDACS content is available under the European Commission's reuse terms (generall
 CC BY 4.0), so credit is shown in every popup. GDACS itself describes its information as
 purely indicative and not for decision-making without other sources, and our footprints are
 simplified, so treat this as an overview rather than an authority.
+
+#### Disease Outbreaks
+The World Health Organization's [Disease Outbreak News](https://www.who.int/emergencies/disease-outbreak-news)
+(DON) is where WHO announces outbreaks of international concern: Ebola and Marburg, MERS,
+Nipah, avian influenza and the like. This layer puts a marker on **each country a current
+report names**. Hover a marker for WHO's own summary of the report — in full, scrolling if it
+is long — the date, and a link to the full report on WHO's site. No API key is needed.
+
+"Current" means two things together: the latest report about that disease in that country was
+published within **Days to count as current** (`active_days`, 45 by default, and it is your own
+setting), and it does not declare the outbreak over. WHO publishes a report when an outbreak is
+announced, when it changes and when it ends, so an outbreak with a newer report shows that one,
+a country that WHO says has ended its outbreak loses its marker (even when the report is mainly
+about another country: the Ebola report that said Uganda had declared its end did not hide the
+DRC), and a one-off event stays up for the full window. The map is often sparse — a handful of
+markers at most — and that is accurate, not a fault.
+
+Limits:
+
+* WHO's reports have no coordinates, only a title, so each marker sits at the **country's
+  centre point**, not at the outbreak's site; the popup says so.
+* A report that names no single country — a **Global** situation report, a **Multi-country**
+  cluster, or a WHO **Region** such as AFRO — cannot be placed. Such a report that is current
+  appears in a collapsed **Not on the map** list in the legend instead, with the same summary
+  and link.
+* Titles are matched to countries by name (WHO's formal names such as "Kingdom of Saudi Arabia"
+  or "Viet Nam" are understood). A territory that is not a country on the map, such as La
+  Réunion or Mayotte, is skipped and noted in the log rather than put on the wrong country.
+* WHO's older archive (back to 1996) is ignored: only reports with a summary from the last
+  few months are kept, and the Housekeeper deletes reports older than 180 days.
+* Terrascope checks four times a day (`runs_per_day`, editable on the Data Status page).
+  If WHO is unreachable the markers stay as they were.
+
+WHO's content is generally published under a non-commercial, share-alike licence; every popup
+credits WHO and links to the report. Check WHO's terms of use before relying on this layer
+commercially.
 
 #### Tsunami Warnings
 The two NOAA tsunami warning centres (the Pacific centre in Honolulu and the National centre
